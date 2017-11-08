@@ -4,8 +4,7 @@
 #include <string>
 #include <windows.h>
 
-const wchar_t *GetWC(const char *c)
-{
+const wchar_t *GetWC(const char *c) {
 	const size_t cSize = strlen(c) + 1;
 	wchar_t* wc = new wchar_t[cSize];
 	mbstowcs(wc, c, cSize);
@@ -13,8 +12,14 @@ const wchar_t *GetWC(const char *c)
 	return wc;
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
+	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+	if (FAILED(hr)) {
+		// ???
+		std::cerr << "CoInitializeEx Failed. code: " << hr;
+		return 1;
+	}
+
 	args::ArgumentParser parser("", "");
 	args::Positional<std::string> exe_path(parser, "EXE", "Executable to launch");
 	args::HelpFlag help(parser, "help", "Display help menu", { 'h', "help" });
@@ -45,7 +50,7 @@ int main(int argc, char* argv[])
 		wait_handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, false, wait_pid.Get());
 
 		if (!wait_handle) {
-			std::cout << "unable to open process";
+			std::cerr << "unable to open process";
 			return 1;
 		}
 
@@ -72,17 +77,19 @@ int main(int argc, char* argv[])
 			ok = true;
 		}
 	} else if (wait_result == WAIT_TIMEOUT) {
-		std::cout << "Timeout waiting for the process";
+		std::cerr << "Timeout waiting for the process";
 	} else {
-		std::cout << "Unknown code: " << wait_result;
+		std::cerr << "Unknown code: " << wait_result;
 		if (wait_result == WAIT_FAILED) {
-			std::cout << " (" << GetLastError() << ")";
+			std::cerr << " (" << GetLastError() << ")";
 		}
 	}
 
 	if (wait_handle != 0) {
 		CloseHandle(wait_handle);
 	}
-    return 0;
+
+	CoUninitialize();
+	return ok ? 0 : 1;
 }
 
