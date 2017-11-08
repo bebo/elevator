@@ -16,11 +16,11 @@ const wchar_t *GetWC(const char *c)
 int main(int argc, char* argv[])
 {
 	args::ArgumentParser parser("", "");
-	args::Positional<unsigned long> wait_pid(parser, "PID", "process id to wait");
-	args::Positional<std::string> exe_path(parser, "EXE", "executable path to launch");
+	args::Positional<std::string> exe_path(parser, "EXE", "Executable to launch");
 	args::HelpFlag help(parser, "help", "Display help menu", { 'h', "help" });
-	args::Flag admin(parser, "admin", "run exe as admin", { 'a', "admin" }, false);
-	args::ValueFlag<int> timeout(parser, "timeout", "timeout", { 't', "timeout" }, 5000);
+	args::ValueFlag<unsigned long> wait_pid(parser, "pid", "Process id to wait", { 'p', "pid" }, 0);
+	args::ValueFlag<int> timeout(parser, "timeout", "Timeout for process to close", { 't', "timeout" }, 5000);
+	args::Flag admin(parser, "admin", "Run executable as admin", { 'a', "admin" }, false);
 
 	try {
 		parser.ParseCLI(argc, argv);
@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	if (!wait_pid || !exe_path) {
+	if (!exe_path) {
 		std::cout << parser;
 		return 0;
 	}
